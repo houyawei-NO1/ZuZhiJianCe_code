@@ -1,0 +1,5 @@
+".\OutPut\main.obj" 
+TO ".\OutPut\NADUDU_ADC" 
+PRINT(".\Listings\NADUDU_ADC.map") CASE 
+CLASSES (EDATA (0x0-0xFFF), 
+HDATA (0x0-0xFFF)) 

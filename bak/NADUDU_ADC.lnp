@@ -1,0 +1,5 @@
+"main.obj" 
+TO "NADUDU_ADC" 
+CASE 
+CLASSES (EDATA (0x0-0xFFF), 
+HDATA (0x0-0xFFF)) 
