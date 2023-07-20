@@ -1,17 +1,8 @@
-#include ".\comm\STC32G.h"
-#include "intrins.h"
-#include "stdio.h"
+#include ".\comm\head.h"
 
-typedef 	unsigned char	u8;
-typedef 	unsigned int	u16;
-typedef 	unsigned long	u32;
-
-
-#define MAIN_Fosc     22118400L  //¶¨ÒåÖ÷Ê±ÖÓ
+#define MAIN_Fosc        12000000L   //¶¨ÒåÖ÷Ê±ÖÓ£¨¾«È·¼ÆËã115200²¨ÌØÂÊ£©
 #define Baudrate      115200L
 #define TM            (65536 -(MAIN_Fosc/Baudrate/4))
-#define Major_Ver      0
-#define Minor_Ver      1
 
 
 /*************	±¾µØ³£Á¿ÉùÃ÷	**************/
@@ -30,28 +21,28 @@ void	ADC_convert(u8 chn);	//chn=0~7¶ÔÓ¦P1.0~P1.7, chn=8~14¶ÔÓ¦P0.0~P0.6, chn=15¶
 u16	Get_ADC12bitResult(u8 channel);
 
 /******************** ´®¿Ú´òÓ¡º¯Êý ********************/
-void UartInit(void)
-{
-	S2_S = 1;       //UART2 switch to: 0: P1.0 P1.1,  1: P4.6 P4.7
-    S2CFG |= 0x01;  //Ê¹ÓÃ´®¿Ú2Ê±£¬W1Î»±ØÐèÉèÖÃÎª1£¬·ñÔò¿ÉÄÜ»á²úÉú²»¿ÉÔ¤ÆÚµÄ´íÎó
-	S2CON = (S2CON & 0x3f) | 0x40; 
-	T2L  = TM;
-	T2H  = TM>>8;
-	AUXR |= 0x14;	      //¶¨Ê±Æ÷2Ê±ÖÓ1TÄ£Ê½,¿ªÊ¼¼ÆÊ±
-}
+//void UartInit(void)
+//{
+//	S2_S = 1;       //UART2 switch to: 0: P1.0 P1.1,  1: P4.6 P4.7
+//    S2CFG |= 0x01;  //Ê¹ÓÃ´®¿Ú2Ê±£¬W1Î»±ØÐèÉèÖÃÎª1£¬·ñÔò¿ÉÄÜ»á²úÉú²»¿ÉÔ¤ÆÚµÄ´íÎó
+//	S2CON = (S2CON & 0x3f) | 0x40; 
+//	T2L  = TM;
+//	T2H  = TM>>8;
+//	AUXR |= 0x14;	      //¶¨Ê±Æ÷2Ê±ÖÓ1TÄ£Ê½,¿ªÊ¼¼ÆÊ±
+//}
 
-void UartPutc(unsigned char dat)
-{
-	S2BUF  = dat; 
-	while(S2TI == 0);
-	S2TI = 0;    //Clear Tx flag
-}
+//void UartPutc(unsigned char dat)
+//{
+//	S2BUF  = dat; 
+//	while(S2TI == 0);
+//	S2TI = 0;    //Clear Tx flag
+//}
 
-char putchar(char c)
-{
-	UartPutc(c);
-	return c;
-}
+//char putchar(char c)
+//{
+//	UartPutc(c);
+//	return c;
+//}
 
 /**********************************************/
 void main(void)
@@ -76,7 +67,8 @@ void main(void)
 	//ADCÄ£¿éµçÔ´´ò¿ªºó£¬ÐèµÈ´ý1ms£¬MCUÄÚ²¿ADCµçÔ´ÎÈ¶¨ºóÔÙ½øÐÐAD×ª»»
 	ADC_CONTR = 0x80 + 0;	//ADC on + channel
 
-	UartInit();
+//	UartInit();
+	UART1_config(2);
 	EA = 1;
 	printf("ÄÏ¶¼Æû³µµç×Ó×èÖµ¼ì²â£¬°æ±¾ºÅ£ºVer%02d.%02d!\r\n",Major_Ver,Minor_Ver);
 
