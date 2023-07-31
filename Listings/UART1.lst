@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  UART1                                                              20/07/23  16:49:12  PAGE 1   
+C251 COMPILER V5.60.0,  UART1                                                              31/07/23  09:49:18  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE UART1
@@ -66,7 +66,7 @@ stmt  level    source
    56          void UART1_config(u8 brt)
    57          {
    58   1          brt = 0;
-C251 COMPILER V5.60.0,  UART1                                                              20/07/23  16:49:12  PAGE 2   
+C251 COMPILER V5.60.0,  UART1                                                              31/07/23  09:49:18  PAGE 2   
 
    59   1      
    60   1          /*********** 波特率使用定时器2 *****************/
@@ -134,7 +134,7 @@ stmt  level    source
   120   1      }
   121          
   122          //========================================================================
-C251 COMPILER V5.60.0,  UART1                                                              20/07/23  16:49:12  PAGE 3   
+C251 COMPILER V5.60.0,  UART1                                                              31/07/23  09:49:18  PAGE 3   
 
   123          
   124          

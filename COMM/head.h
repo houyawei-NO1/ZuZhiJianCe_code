@@ -5,15 +5,23 @@
 #include ".\STC32G.h"
 #include "intrins.h"
 #include "stdio.h"
+#include "string.h"
+
 //定义数据类型
 typedef 	unsigned char	u8;
 typedef 	unsigned int	u16;
 typedef 	unsigned long	u32;
-//主频
 
+//主频
 #define MAIN_Fosc        12000000L 
 #define Major_Ver      0
 #define Minor_Ver      1
+
+//mcu id
+#define ID_ADDR (&CHIPID0)
+
+//max485TX使能
+sbit  TxOut_EN  = P3^2;
 
 //定时器装载数值
 
@@ -25,6 +33,8 @@ void Timer1_init(void);
 void Timer3_init(void);
 void display_init(void);
 
+
+//延时函数
 void	delay_ms(u8 ms);
 
 

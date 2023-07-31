@@ -13,6 +13,10 @@
 
 /*************	本地变量声明	**************/
 
+unsigned char adc_result[256];
+unsigned char temp_result[10];
+unsigned char mcuid[20];
+unsigned char temp_mcuid[10];
 
 /*************	本地函数声明	**************/
 
@@ -49,6 +53,7 @@ void main(void)
 {
 	u8	i;
 
+
     WTST = 0;  //设置程序指令延时参数，赋值为0可将CPU执行指令的速度设置为最快
     EAXFR = 1; //扩展寄存器(XFR)访问使能
     CKCON = 0; //提高访问XRAM速度
@@ -56,7 +61,7 @@ void main(void)
     P0M1 = 0x7f;   P0M0 = 0x00;   //设置为高阻输入
     P1M1 = 0xfb;   P1M0 = 0x00;   //设置为高阻输入
     P2M1 = 0x3c;   P2M0 = 0x3c;   //设置P2.2~P2.5为漏极开路(实验箱加了上拉电阻到3.3V)
-    P3M1 = 0x50;   P3M0 = 0x50;   //设置P3.4、P3.6为漏极开路(实验箱加了上拉电阻到3.3V)
+    P3M1 = 0x50;   P3M0 = 0x50;   //设置P3.4、P3.6为漏极开路(实验箱加了上拉电阻到3.3V)    P3M1 = 0x50;   P3M0 = 0x54;   
     P4M1 = 0x3c;   P4M0 = 0x3c;   //设置P4.2~P4.5为漏极开路(实验箱加了上拉电阻到3.3V)
     P5M1 = 0x1c;   P5M0 = 0x0c;   //设置P5.2、P5.3为漏极开路(实验箱加了上拉电阻到3.3V)，设置P5.4为高阻输入
     P6M1 = 0xff;   P6M0 = 0xff;   //设置为漏极开路(实验箱加了上拉电阻到3.3V)
@@ -70,19 +75,34 @@ void main(void)
 //	UartInit();
 	UART1_config(2);
 	EA = 1;
+	
+//	TxOut_EN = 0;
+	P32 = 0;
+	printf("NanDu Program Start\r\n");
 	printf("南都汽车电子阻值检测，版本号：Ver%02d.%02d!\r\n",Major_Ver,Minor_Ver);
-
+//	TxOut_EN = 0;
+	
+	for(i=0; i<7; i++)
+		{
+//		printf("%02X",ID_ADDR[i]);	
+		sprintf (temp_mcuid,"%02X",ID_ADDR[i]);
+		strcat(mcuid,temp_mcuid);
+		}
+		mcuid[15]='\0';
+//		printf("MCUID:%s \r\n",mcuid);
 	while (1)
 	{
-		for(i=0; i<16; i++)
+		adc_result[0] = '\0';	
+		for(i=0; i<15; i++)
 		{
 			delay_ms(200);
-			//ADC_convert(3);		//发送固定通道AD值
-
 			ADC_convert(i);		//发送轮询通道AD值
-			if((i & 7) == 7)	//分两行打印
+			if(i==14)	
 			{
+				printf("MCUID;%s;",mcuid);
+				printf("adc_result;%s",adc_result);	
 				printf("\r\n");
+//				TxOut_EN = 0;
 			}
 		}
 	}
@@ -121,16 +141,20 @@ void ADC_convert(u8 chn)
 {
 	u16	j;
 	u8	k;		//平均值滤波时使用
+	double f;
 
 	Get_ADC12bitResult(chn);		//参数i=0~15,查询方式做一次ADC, 切换通道后第一次转换结果丢弃. 避免采样电容的残存电压影响.
 	Get_ADC12bitResult(chn);		//参数i=0~15,查询方式做一次ADC, 切换通道后第二次转换结果丢弃. 避免采样电容的残存电压影响.
 	for(k=0, j=0; k<SUM_LENGTH; k++)	j += Get_ADC12bitResult(chn);	// 采样累加和, 参数0~15,查询方式做一次ADC, 返回值就是结果
 	j = j / SUM_LENGTH;		// 求平均
 
-	if(chn == 15)	printf("Bandgap=%04d  ",j);	//内基准 1.19V
-	else		//ADC0~ADC14
-	{
-		printf("ADC%02d=%04d  ",chn,j);
+	f=get_r(300,j);
+
+	if(chn != 15)
+	{			
+//		printf("ADC%02d=%0.2f  ",chn,f);
+	sprintf (temp_result,"%0.2f;",f);
+	strcat(adc_result,temp_result);
 	}
 }
 
@@ -151,4 +175,13 @@ void delay_ms(u8 ms)
 		i = MAIN_Fosc / 6000;
 		while(--i);
 	}while(--ms);
+}
+
+float get_r(float R0,unsigned int ad)
+{
+	float r;
+//	if(ad>=4000) return(9999);
+	r=R0*(float)ad/(float)(4095.00-ad);	
+	if(r<=1) r=1;
+	return(r);
 }
