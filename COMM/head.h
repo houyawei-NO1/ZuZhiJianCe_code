@@ -15,7 +15,7 @@ typedef 	unsigned long	u32;
 //主频
 #define MAIN_Fosc        12000000L 
 #define Major_Ver      0
-#define Minor_Ver      1
+#define Minor_Ver      2
 
 //mcu id
 #define ID_ADDR (&CHIPID0)
@@ -53,7 +53,13 @@ unsigned int get_ad_result(unsigned char channl);
 #define Baudrate1   (65536 - MAIN_Fosc / 115200 / 4)
 
 #define UART1_BUF_LENGTH    128
+extern u8  TX1_Cnt;    //发送计数
+extern u8  RX1_Cnt;    //接收计数
 
+extern bit B_TX1_Busy; //发送忙标志
+
+
+extern u8  RX1_Buffer[UART1_BUF_LENGTH]; //接收缓冲
 void UartPutc(unsigned char dat);
 char putchar(char c);
 void UART1_config(u8 brt);

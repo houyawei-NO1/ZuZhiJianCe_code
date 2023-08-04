@@ -17,36 +17,14 @@ unsigned char adc_result[256];
 unsigned char temp_result[10];
 unsigned char mcuid[20];
 unsigned char temp_mcuid[10];
+unsigned char rec_buffer[UART1_BUF_LENGTH];
+unsigned char temp_buffer[10];
 
 /*************	本地函数声明	**************/
 
 void	delay_ms(u8 ms);
 void	ADC_convert(u8 chn);	//chn=0~7对应P1.0~P1.7, chn=8~14对应P0.0~P0.6, chn=15对应BandGap电压
 u16	Get_ADC12bitResult(u8 channel);
-
-/******************** 串口打印函数 ********************/
-//void UartInit(void)
-//{
-//	S2_S = 1;       //UART2 switch to: 0: P1.0 P1.1,  1: P4.6 P4.7
-//    S2CFG |= 0x01;  //使用串口2时，W1位必需设置为1，否则可能会产生不可预期的错误
-//	S2CON = (S2CON & 0x3f) | 0x40; 
-//	T2L  = TM;
-//	T2H  = TM>>8;
-//	AUXR |= 0x14;	      //定时器2时钟1T模式,开始计时
-//}
-
-//void UartPutc(unsigned char dat)
-//{
-//	S2BUF  = dat; 
-//	while(S2TI == 0);
-//	S2TI = 0;    //Clear Tx flag
-//}
-
-//char putchar(char c)
-//{
-//	UartPutc(c);
-//	return c;
-//}
 
 /**********************************************/
 void main(void)
@@ -72,39 +50,55 @@ void main(void)
 	//ADC模块电源打开后，需等待1ms，MCU内部ADC电源稳定后再进行AD转换
 	ADC_CONTR = 0x80 + 0;	//ADC on + channel
 
-//	UartInit();
 	UART1_config(2);
 	EA = 1;
 	
-//	TxOut_EN = 0;
-	P32 = 0;
+	P32 = 1;
 	printf("NanDu Program Start\r\n");
 	printf("南都汽车电子阻值检测，版本号：Ver%02d.%02d!\r\n",Major_Ver,Minor_Ver);
-//	TxOut_EN = 0;
+	P32 = 0;
 	
 	for(i=0; i<7; i++)
 		{
-//		printf("%02X",ID_ADDR[i]);	
+		printf("%02X",ID_ADDR[i]);	
 		sprintf (temp_mcuid,"%02X",ID_ADDR[i]);
 		strcat(mcuid,temp_mcuid);
 		}
 		mcuid[15]='\0';
-//		printf("MCUID:%s \r\n",mcuid);
+		printf("MCUID:%s \r\n",mcuid);
 	while (1)
 	{
-		adc_result[0] = '\0';	
-		for(i=0; i<15; i++)
+		if(TX1_Cnt != RX1_Cnt) P32 = 1;
+		else 
 		{
-			delay_ms(200);
-			ADC_convert(i);		//发送轮询通道AD值
-			if(i==14)	
-			{
-				printf("MCUID;%s;",mcuid);
-				printf("adc_result;%s",adc_result);	
-				printf("\r\n");
-//				TxOut_EN = 0;
-			}
+			rec_buffer[0]='\0';
+			P32 = 0;
 		}
+		adc_result[0] = '\0';	
+		
+		delay_ms(10);
+		 if((TX1_Cnt != RX1_Cnt) && (!B_TX1_Busy))   //收到数据, 发送空闲
+        {
+						P32 = 1;
+					  sprintf (temp_buffer,"%c",RX1_Buffer[TX1_Cnt]);
+					  strcat(rec_buffer,temp_buffer);
+//            SBUF = RX1_Buffer[TX1_Cnt];
+//            B_TX1_Busy = 1;
+            if(++TX1_Cnt >= UART1_BUF_LENGTH)   TX1_Cnt = 0;
+						
+        } 
+				
+				if(strcmp(rec_buffer,mcuid)==0)
+				{
+						for(i=0; i<15; i++)
+					{
+						delay_ms(10);
+						ADC_convert(i);		//发送轮询通道AD值
+					}
+						printf("adc_result;%s",adc_result);	
+						printf("\r\n");
+			}
+				
 	}
 }
 
@@ -152,7 +146,7 @@ void ADC_convert(u8 chn)
 
 	if(chn != 15)
 	{			
-//		printf("ADC%02d=%0.2f  ",chn,f);
+//		printf("ADC%02d=%0.2f \r\n",chn,f);
 	sprintf (temp_result,"%0.2f;",f);
 	strcat(adc_result,temp_result);
 	}
@@ -180,7 +174,7 @@ void delay_ms(u8 ms)
 float get_r(float R0,unsigned int ad)
 {
 	float r;
-//	if(ad>=4000) return(9999);
+//	if(ad >= 1228200) return(1228200);
 	r=R0*(float)ad/(float)(4095.00-ad);	
 	if(r<=1) r=1;
 	return(r);

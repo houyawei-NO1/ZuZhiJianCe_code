@@ -12,9 +12,9 @@ u8  RX1_Buffer[UART1_BUF_LENGTH]; //½ÓÊÕ»º³å
 
 void UartPutc(unsigned char dat)
 {
-	   SBUF = dat;
-        B_TX1_Busy = 1;
-        while(B_TX1_Busy);
+	 SBUF = dat;
+	 B_TX1_Busy = 1;
+	 while(B_TX1_Busy);
 }
 
 char putchar(char c)
@@ -107,6 +107,7 @@ void UART1_int (void) interrupt 4
 {
     if(RI)
     {
+//				P32 = 0;
         RI = 0;
         RX1_Buffer[RX1_Cnt] = SBUF;
         if(++RX1_Cnt >= UART1_BUF_LENGTH)   RX1_Cnt = 0;
@@ -114,6 +115,7 @@ void UART1_int (void) interrupt 4
 
     if(TI)
     {
+//				P32 = 1;
         TI = 0;
         B_TX1_Busy = 0;
     }

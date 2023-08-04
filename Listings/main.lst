@@ -1,10 +1,10 @@
-C251 COMPILER V5.60.0,  main                                                               31/07/23  09:49:18  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               04/08/23  20:23:58  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
 OBJECT MODULE PLACED IN .\OutPut\main.obj
-COMPILER INVOKED BY: C:\Keil_v5\C251\BIN\C251.EXE main.c XSMALL INTR2 BROWSE DEBUG PRINT(.\Listings\main.lst) OBJECT(.\O
-                    -utPut\main.obj) 
+COMPILER INVOKED BY: D:\keil\UV4\C251\BIN\C251.EXE main.c XSMALL INTR2 BROWSE DEBUG PRINT(.\Listings\main.lst) TABS(2) O
+                    -BJECT(.\OutPut\main.obj) 
 
 stmt  level    source
 
@@ -15,210 +15,204 @@ stmt  level    source
     5          #define TM            (65536 -(MAIN_Fosc/Baudrate/4))
     6          
     7          
-    8          /*************  ±¾µØ³£Á¿ÉùÃ÷    **************/
+    8          /*************  ±¾µØ³£Á¿ÉùÃ÷  **************/
     9          
-   10          #define ADC_SPEED       15              /* 0~15, ADC×ª»»Ê±¼ä(CPUÊ±ÖÓÊı) = (n+1)*32  ADCCFG */
-   11          #define RES_FMT         (1<<5)  /* ADC½á¹û¸ñÊ½ 0: ×ó¶ÔÆë, ADC_RES: D11 D10 D9 D8 D7 D6 D5 D4, ADC_RESL: D3 D2 D1 
+   10          #define ADC_SPEED 15    /* 0~15, ADC×ª»»Ê±¼ä(CPUÊ±ÖÓÊı) = (n+1)*32  ADCCFG */
+   11          #define RES_FMT   (1<<5)  /* ADC½á¹û¸ñÊ½ 0: ×ó¶ÔÆë, ADC_RES: D11 D10 D9 D8 D7 D6 D5 D4, ADC_RESL: D3 D2 D1 
              -D0 0 0 0 0 */
-   12                                                                  /* ADCCFG      1: ÓÒ¶ÔÆë, ADC_RES: 0 0 0 0 D11 D10 D9 D8, ADC_RESL: D7 D6 D5 D4 D3 D2 D1 D0 */
+   12                        /* ADCCFG      1: ÓÒ¶ÔÆë, ADC_RES: 0 0 0 0 D11 D10 D9 D8, ADC_RESL: D7 D6 D5 D4 D3 D2 D1 D0 */
    13          
-   14          /*************  ±¾µØ±äÁ¿ÉùÃ÷    **************/
+   14          /*************  ±¾µØ±äÁ¿ÉùÃ÷  **************/
    15          
    16          unsigned char adc_result[256];
    17          unsigned char temp_result[10];
    18          unsigned char mcuid[20];
    19          unsigned char temp_mcuid[10];
-   20          
-   21          /*************  ±¾µØº¯ÊıÉùÃ÷    **************/
+   20          unsigned char rec_buffer[UART1_BUF_LENGTH];
+   21          unsigned char temp_buffer[10];
    22          
-   23          void    delay_ms(u8 ms);
-   24          void    ADC_convert(u8 chn);    //chn=0~7¶ÔÓ¦P1.0~P1.7, chn=8~14¶ÔÓ¦P0.0~P0.6, chn=15¶ÔÓ¦BandGapµçÑ¹
-   25          u16     Get_ADC12bitResult(u8 channel);
-   26          
-   27          /******************** ´®¿Ú´òÓ¡º¯Êı ********************/
-   28          //void UartInit(void)
-   29          //{
-   30          //      S2_S = 1;       //UART2 switch to: 0: P1.0 P1.1,  1: P4.6 P4.7
-   31          //    S2CFG |= 0x01;  //Ê¹ÓÃ´®¿Ú2Ê±£¬W1Î»±ØĞèÉèÖÃÎª1£¬·ñÔò¿ÉÄÜ»á²úÉú²»¿ÉÔ¤ÆÚµÄ´íÎó
-   32          //      S2CON = (S2CON & 0x3f) | 0x40; 
-   33          //      T2L  = TM;
-   34          //      T2H  = TM>>8;
-   35          //      AUXR |= 0x14;         //¶¨Ê±Æ÷2Ê±ÖÓ1TÄ£Ê½,¿ªÊ¼¼ÆÊ±
-   36          //}
-   37          
-   38          //void UartPutc(unsigned char dat)
-   39          //{
-   40          //      S2BUF  = dat; 
-   41          //      while(S2TI == 0);
-   42          //      S2TI = 0;    //Clear Tx flag
-   43          //}
-   44          
-   45          //char putchar(char c)
-   46          //{
-   47          //      UartPutc(c);
-   48          //      return c;
-   49          //}
-   50          
-   51          /**********************************************/
-   52          void main(void)
-   53          {
-   54   1              u8      i;
-   55   1      
-   56   1      
-   57   1          WTST = 0;  //ÉèÖÃ³ÌĞòÖ¸ÁîÑÓÊ±²ÎÊı£¬¸³ÖµÎª0¿É½«CPUÖ´ĞĞÖ¸ÁîµÄËÙ¶ÈÉèÖÃÎª×î¿ì
-C251 COMPILER V5.60.0,  main                                                               31/07/23  09:49:18  PAGE 2   
-
-   58   1          EAXFR = 1; //À©Õ¹¼Ä´æÆ÷(XFR)·ÃÎÊÊ¹ÄÜ
-   59   1          CKCON = 0; //Ìá¸ß·ÃÎÊXRAMËÙ¶È
-   60   1      
-   61   1          P0M1 = 0x7f;   P0M0 = 0x00;   //ÉèÖÃÎª¸ß×èÊäÈë
-   62   1          P1M1 = 0xfb;   P1M0 = 0x00;   //ÉèÖÃÎª¸ß×èÊäÈë
-   63   1          P2M1 = 0x3c;   P2M0 = 0x3c;   //ÉèÖÃP2.2~P2.5ÎªÂ©¼«¿ªÂ·(ÊµÑéÏä¼ÓÁËÉÏÀ­µç×èµ½3.3V)
-   64   1          P3M1 = 0x50;   P3M0 = 0x50;   //ÉèÖÃP3.4¡¢P3.6ÎªÂ©¼«¿ªÂ·(ÊµÑéÏä¼ÓÁËÉÏÀ­µç×èµ½3.3V)    P3M1 = 0x50;   
+   23          /*************  ±¾µØº¯ÊıÉùÃ÷  **************/
+   24          
+   25          void  delay_ms(u8 ms);
+   26          void  ADC_convert(u8 chn);  //chn=0~7¶ÔÓ¦P1.0~P1.7, chn=8~14¶ÔÓ¦P0.0~P0.6, chn=15¶ÔÓ¦BandGapµçÑ¹
+   27          u16 Get_ADC12bitResult(u8 channel);
+   28          
+   29          /**********************************************/
+   30          void main(void)
+   31          {
+   32   1        u8  i;
+   33   1      
+   34   1      
+   35   1          WTST = 0;  //ÉèÖÃ³ÌĞòÖ¸ÁîÑÓÊ±²ÎÊı£¬¸³ÖµÎª0¿É½«CPUÖ´ĞĞÖ¸ÁîµÄËÙ¶ÈÉèÖÃÎª×î¿ì
+   36   1          EAXFR = 1; //À©Õ¹¼Ä´æÆ÷(XFR)·ÃÎÊÊ¹ÄÜ
+   37   1          CKCON = 0; //Ìá¸ß·ÃÎÊXRAMËÙ¶È
+   38   1      
+   39   1          P0M1 = 0x7f;   P0M0 = 0x00;   //ÉèÖÃÎª¸ß×èÊäÈë
+   40   1          P1M1 = 0xfb;   P1M0 = 0x00;   //ÉèÖÃÎª¸ß×èÊäÈë
+   41   1          P2M1 = 0x3c;   P2M0 = 0x3c;   //ÉèÖÃP2.2~P2.5ÎªÂ©¼«¿ªÂ·(ÊµÑéÏä¼ÓÁËÉÏÀ­µç×èµ½3.3V)
+   42   1          P3M1 = 0x50;   P3M0 = 0x50;   //ÉèÖÃP3.4¡¢P3.6ÎªÂ©¼«¿ªÂ·(ÊµÑéÏä¼ÓÁËÉÏÀ­µç×èµ½3.3V)    P3M1 = 0x50;   
              -P3M0 = 0x54;   
-   65   1          P4M1 = 0x3c;   P4M0 = 0x3c;   //ÉèÖÃP4.2~P4.5ÎªÂ©¼«¿ªÂ·(ÊµÑéÏä¼ÓÁËÉÏÀ­µç×èµ½3.3V)
-   66   1          P5M1 = 0x1c;   P5M0 = 0x0c;   //ÉèÖÃP5.2¡¢P5.3ÎªÂ©¼«¿ªÂ·(ÊµÑéÏä¼ÓÁËÉÏÀ­µç×èµ½3.3V)£¬ÉèÖÃP5.4Îª¸ß×èÊäÈ
+   43   1          P4M1 = 0x3c;   P4M0 = 0x3c;   //ÉèÖÃP4.2~P4.5ÎªÂ©¼«¿ªÂ·(ÊµÑéÏä¼ÓÁËÉÏÀ­µç×èµ½3.3V)
+   44   1          P5M1 = 0x1c;   P5M0 = 0x0c;   //ÉèÖÃP5.2¡¢P5.3ÎªÂ©¼«¿ªÂ·(ÊµÑéÏä¼ÓÁËÉÏÀ­µç×èµ½3.3V)£¬ÉèÖÃP5.4Îª¸ß×èÊäÈ
              -ë
-   67   1          P6M1 = 0xff;   P6M0 = 0xff;   //ÉèÖÃÎªÂ©¼«¿ªÂ·(ÊµÑéÏä¼ÓÁËÉÏÀ­µç×èµ½3.3V)
-   68   1          P7M1 = 0x00;   P7M0 = 0x00;   //ÉèÖÃÎª×¼Ë«Ïò¿Ú
-   69   1      
-   70   1              ADCTIM = 0x3f;  //ÉèÖÃÍ¨µÀÑ¡ÔñÊ±¼ä¡¢±£³ÖÊ±¼ä¡¢²ÉÑùÊ±¼ä
-   71   1              ADCCFG = RES_FMT + ADC_SPEED;
-   72   1              //ADCÄ£¿éµçÔ´´ò¿ªºó£¬ĞèµÈ´ı1ms£¬MCUÄÚ²¿ADCµçÔ´ÎÈ¶¨ºóÔÙ½øĞĞAD×ª»»
-   73   1              ADC_CONTR = 0x80 + 0;   //ADC on + channel
-   74   1      
-   75   1      //      UartInit();
-   76   1              UART1_config(2);
-   77   1              EA = 1;
-   78   1              
-   79   1      //      TxOut_EN = 0;
-   80   1              P32 = 0;
-   81   1              printf("NanDu Program Start\r\n");
-   82   1              printf("ÄÏ¶¼Æû³µµç×Ó×èÖµ¼ì²â£¬°æ±¾ºÅ£ºVer%02d.%02d!\r\n",Major_Ver,Minor_Ver);
-   83   1      //      TxOut_EN = 0;
-   84   1              
-   85   1              for(i=0; i<7; i++)
-   86   1                      {
-   87   2      //              printf("%02X",ID_ADDR[i]);      
-   88   2                      sprintf (temp_mcuid,"%02X",ID_ADDR[i]);
-   89   2                      strcat(mcuid,temp_mcuid);
-   90   2                      }
-   91   1                      mcuid[15]='\0';
-   92   1      //              printf("MCUID:%s \r\n",mcuid);
-   93   1              while (1)
-   94   1              {
-   95   2                      adc_result[0] = '\0';   
-   96   2                      for(i=0; i<15; i++)
-   97   2                      {
-   98   3                              delay_ms(200);
-   99   3                              ADC_convert(i);         //·¢ËÍÂÖÑ¯Í¨µÀADÖµ
-  100   3                              if(i==14)       
-  101   3                              {
-  102   4                                      printf("MCUID;%s;",mcuid);
-  103   4                                      printf("adc_result;%s",adc_result);     
-  104   4                                      printf("\r\n");
-  105   4      //                              TxOut_EN = 0;
-  106   4                              }
-  107   3                      }
-  108   2              }
-  109   1      }
-  110          
-  111          
+   45   1          P6M1 = 0xff;   P6M0 = 0xff;   //ÉèÖÃÎªÂ©¼«¿ªÂ·(ÊµÑéÏä¼ÓÁËÉÏÀ­µç×èµ½3.3V)
+   46   1          P7M1 = 0x00;   P7M0 = 0x00;   //ÉèÖÃÎª×¼Ë«Ïò¿Ú
+   47   1      
+   48   1        ADCTIM = 0x3f;  //ÉèÖÃÍ¨µÀÑ¡ÔñÊ±¼ä¡¢±£³ÖÊ±¼ä¡¢²ÉÑùÊ±¼ä
+   49   1        ADCCFG = RES_FMT + ADC_SPEED;
+   50   1        //ADCÄ£¿éµçÔ´´ò¿ªºó£¬ĞèµÈ´ı1ms£¬MCUÄÚ²¿ADCµçÔ´ÎÈ¶¨ºóÔÙ½øĞĞAD×ª»»
+   51   1        ADC_CONTR = 0x80 + 0; //ADC on + channel
+   52   1      
+   53   1        UART1_config(2);
+   54   1        EA = 1;
+   55   1        
+C251 COMPILER V5.60.0,  main                                                               04/08/23  20:23:58  PAGE 2   
+
+   56   1        P32 = 1;
+   57   1        printf("NanDu Program Start\r\n");
+   58   1        printf("ÄÏ¶¼Æû³µµç×Ó×èÖµ¼ì²â£¬°æ±¾ºÅ£ºVer%02d.%02d!\r\n",Major_Ver,Minor_Ver);
+   59   1        P32 = 0;
+   60   1        
+   61   1        for(i=0; i<7; i++)
+   62   1          {
+   63   2          printf("%02X",ID_ADDR[i]);  
+   64   2          sprintf (temp_mcuid,"%02X",ID_ADDR[i]);
+   65   2          strcat(mcuid,temp_mcuid);
+   66   2          }
+   67   1          mcuid[15]='\0';
+   68   1          printf("MCUID:%s \r\n",mcuid);
+   69   1        while (1)
+   70   1        {
+   71   2          if(TX1_Cnt != RX1_Cnt) P32 = 1;
+   72   2          else 
+   73   2          {
+   74   3            rec_buffer[0]='\0';
+   75   3            P32 = 0;
+   76   3          }
+   77   2          adc_result[0] = '\0'; 
+   78   2          
+   79   2          delay_ms(10);
+   80   2           if((TX1_Cnt != RX1_Cnt) && (!B_TX1_Busy))   //ÊÕµ½Êı¾İ, ·¢ËÍ¿ÕÏĞ
+   81   2              {
+   82   3                  P32 = 1;
+   83   3                  sprintf (temp_buffer,"%c",RX1_Buffer[TX1_Cnt]);
+   84   3                  strcat(rec_buffer,temp_buffer);
+   85   3      //            SBUF = RX1_Buffer[TX1_Cnt];
+   86   3      //            B_TX1_Busy = 1;
+   87   3                  if(++TX1_Cnt >= UART1_BUF_LENGTH)   TX1_Cnt = 0;
+   88   3                  
+   89   3              } 
+   90   2              
+   91   2              if(strcmp(rec_buffer,mcuid)==0)
+   92   2              {
+   93   3                  for(i=0; i<15; i++)
+   94   3                {
+   95   4                  delay_ms(10);
+   96   4                  ADC_convert(i);   //·¢ËÍÂÖÑ¯Í¨µÀADÖµ
+   97   4                }
+   98   3                  printf("adc_result;%s",adc_result); 
+   99   3                  printf("\r\n");
+  100   3            }
+  101   2              
+  102   2        }
+  103   1      }
+  104          
+  105          
+  106          //========================================================================
+  107          // º¯Êı: u16 Get_ADC12bitResult(u8 channel))  //channel = 0~15
+  108          // ÃèÊö: ²éÑ¯·¨¶ÁÒ»´ÎADC½á¹û.
+  109          // ²ÎÊı: channel: Ñ¡ÔñÒª×ª»»µÄADC, 0~15.
+  110          // ·µ»Ø: 12Î»ADC½á¹û.
+  111          // °æ±¾: V1.0, 2016-4-28
   112          //========================================================================
-  113          // º¯Êı: u16 Get_ADC12bitResult(u8 channel))    //channel = 0~15
-  114          // ÃèÊö: ²éÑ¯·¨¶ÁÒ»´ÎADC½á¹û.
-  115          // ²ÎÊı: channel: Ñ¡ÔñÒª×ª»»µÄADC, 0~15.
-  116          // ·µ»Ø: 12Î»ADC½á¹û.
-  117          // °æ±¾: V1.0, 2016-4-28
-  118          //========================================================================
-  119          u16     Get_ADC12bitResult(u8 channel)  //channel = 0~15
-  120          {
-  121   1              ADC_RES = 0;
-C251 COMPILER V5.60.0,  main                                                               31/07/23  09:49:18  PAGE 3   
+  113          u16 Get_ADC12bitResult(u8 channel)  //channel = 0~15
+  114          {
+  115   1        ADC_RES = 0;
+  116   1        ADC_RESL = 0;
+  117   1      
+  118   1          ADC_CONTR = (ADC_CONTR & 0xf0) | channel; //ÉèÖÃADC×ª»»Í¨µÀ
+  119   1          ADC_START = 1;//Æô¶¯ADC×ª»»
+  120   1          _nop_();
+  121   1        _nop_();
+C251 COMPILER V5.60.0,  main                                                               04/08/23  20:23:58  PAGE 3   
 
-  122   1              ADC_RESL = 0;
-  123   1      
-  124   1          ADC_CONTR = (ADC_CONTR & 0xf0) | channel; //ÉèÖÃADC×ª»»Í¨µÀ
-  125   1          ADC_START = 1;//Æô¶¯ADC×ª»»
-  126   1          _nop_();
-  127   1              _nop_();
-  128   1              _nop_();
-  129   1              _nop_();
-  130   1          while(ADC_FLAG == 0);   //wait for ADC finish
-  131   1          ADC_FLAG = 0;     //Çå³ıADC½áÊø±êÖ¾
-  132   1              return (((u16)ADC_RES << 8) | ADC_RESL);
-  133   1      }
-  134          
-  135          #define         SUM_LENGTH      16      /* Æ½¾ùÖµ²ÉÑù´ÎÊı ×î´óÖµ16 */
-  136          
-  137          /***********************************
-  138          ²éÑ¯·½Ê½×öÒ»´ÎADC, chnÎªÍ¨µÀºÅ, chn=0~7¶ÔÓ¦P1.0~P1.7, chn=8~14¶ÔÓ¦P0.0~P0.6, chn=15¶ÔÓ¦BandGapµçÑ¹.
-  139          ***********************************/
-  140          void ADC_convert(u8 chn)
-  141          {
-  142   1              u16     j;
-  143   1              u8      k;              //Æ½¾ùÖµÂË²¨Ê±Ê¹ÓÃ
-  144   1              double f;
-  145   1      
-  146   1              Get_ADC12bitResult(chn);                //²ÎÊıi=0~15,²éÑ¯·½Ê½×öÒ»´ÎADC, ÇĞ»»Í¨µÀºóµÚÒ»´Î×ª»»½á¹û¶ªÆú. ±ÜÃâ²ÉÑùµçÈİµÄ²Ğ
+  122   1        _nop_();
+  123   1        _nop_();
+  124   1          while(ADC_FLAG == 0);   //wait for ADC finish
+  125   1          ADC_FLAG = 0;     //Çå³ıADC½áÊø±êÖ¾
+  126   1        return (((u16)ADC_RES << 8) | ADC_RESL);
+  127   1      }
+  128          
+  129          #define   SUM_LENGTH  16  /* Æ½¾ùÖµ²ÉÑù´ÎÊı ×î´óÖµ16 */
+  130          
+  131          /***********************************
+  132          ²éÑ¯·½Ê½×öÒ»´ÎADC, chnÎªÍ¨µÀºÅ, chn=0~7¶ÔÓ¦P1.0~P1.7, chn=8~14¶ÔÓ¦P0.0~P0.6, chn=15¶ÔÓ¦BandGapµçÑ¹.
+  133          ***********************************/
+  134          void ADC_convert(u8 chn)
+  135          {
+  136   1        u16 j;
+  137   1        u8  k;    //Æ½¾ùÖµÂË²¨Ê±Ê¹ÓÃ
+  138   1        double f;
+  139   1      
+  140   1        Get_ADC12bitResult(chn);    //²ÎÊıi=0~15,²éÑ¯·½Ê½×öÒ»´ÎADC, ÇĞ»»Í¨µÀºóµÚÒ»´Î×ª»»½á¹û¶ªÆú. ±ÜÃâ²ÉÑùµçÈİµÄ²Ğ
              -´æµçÑ¹Ó°Ïì.
-  147   1              Get_ADC12bitResult(chn);                //²ÎÊıi=0~15,²éÑ¯·½Ê½×öÒ»´ÎADC, ÇĞ»»Í¨µÀºóµÚ¶ş´Î×ª»»½á¹û¶ªÆú. ±ÜÃâ²ÉÑùµçÈİµÄ²Ğ
+  141   1        Get_ADC12bitResult(chn);    //²ÎÊıi=0~15,²éÑ¯·½Ê½×öÒ»´ÎADC, ÇĞ»»Í¨µÀºóµÚ¶ş´Î×ª»»½á¹û¶ªÆú. ±ÜÃâ²ÉÑùµçÈİµÄ²Ğ
              -´æµçÑ¹Ó°Ïì.
-  148   1              for(k=0, j=0; k<SUM_LENGTH; k++)        j += Get_ADC12bitResult(chn);   // ²ÉÑùÀÛ¼ÓºÍ, ²ÎÊı0~15,²éÑ¯·½Ê½×öÒ»´ÎADC
+  142   1        for(k=0, j=0; k<SUM_LENGTH; k++)  j += Get_ADC12bitResult(chn); // ²ÉÑùÀÛ¼ÓºÍ, ²ÎÊı0~15,²éÑ¯·½Ê½×öÒ»´ÎADC
              -, ·µ»ØÖµ¾ÍÊÇ½á¹û
-  149   1              j = j / SUM_LENGTH;             // ÇóÆ½¾ù
-  150   1      
-  151   1              f=get_r(300,j);
-  152   1      
-  153   1              if(chn != 15)
-  154   1              {                       
-  155   2      //              printf("ADC%02d=%0.2f  ",chn,f);
-  156   2              sprintf (temp_result,"%0.2f;",f);
-  157   2              strcat(adc_result,temp_result);
-  158   2              }
-  159   1      }
-  160          
-  161          //========================================================================
-  162          // º¯Êı: void delay_ms(u8 ms)
-  163          // ÃèÊö: ÑÓÊ±º¯Êı¡£
-  164          // ²ÎÊı: ms,ÒªÑÓÊ±µÄmsÊı, ÕâÀïÖ»Ö§³Ö1~255ms. ×Ô¶¯ÊÊÓ¦Ö÷Ê±ÖÓ.
-  165          // ·µ»Ø: none.
-  166          // °æ±¾: VER1.0
-  167          // ÈÕÆÚ: 2013-4-1
-  168          // ±¸×¢: 
-  169          //========================================================================
-  170          void delay_ms(u8 ms)
-  171          {
-  172   1              u16 i;
-  173   1              do
-  174   1              {
-  175   2                      i = MAIN_Fosc / 6000;
-  176   2                      while(--i);
-  177   2              }while(--ms);
-  178   1      }
-  179          
-  180          float get_r(float R0,unsigned int ad)
-  181          {
-  182   1              float r;
-  183   1      //      if(ad>=4000) return(9999);
-  184   1              r=R0*(float)ad/(float)(4095.00-ad);     
-C251 COMPILER V5.60.0,  main                                                               31/07/23  09:49:18  PAGE 4   
-
-  185   1              if(r<=1) r=1;
-  186   1              return(r);
-  187   1      }
+  143   1        j = j / SUM_LENGTH;   // ÇóÆ½¾ù
+  144   1      
+  145   1        f=get_r(300,j);
+  146   1      
+  147   1        if(chn != 15)
+  148   1        {     
+  149   2      //    printf("ADC%02d=%0.2f \r\n",chn,f);
+  150   2        sprintf (temp_result,"%0.2f;",f);
+  151   2        strcat(adc_result,temp_result);
+  152   2        }
+  153   1      }
+  154          
+  155          //========================================================================
+  156          // º¯Êı: void delay_ms(u8 ms)
+  157          // ÃèÊö: ÑÓÊ±º¯Êı¡£
+  158          // ²ÎÊı: ms,ÒªÑÓÊ±µÄmsÊı, ÕâÀïÖ»Ö§³Ö1~255ms. ×Ô¶¯ÊÊÓ¦Ö÷Ê±ÖÓ.
+  159          // ·µ»Ø: none.
+  160          // °æ±¾: VER1.0
+  161          // ÈÕÆÚ: 2013-4-1
+  162          // ±¸×¢: 
+  163          //========================================================================
+  164          void delay_ms(u8 ms)
+  165          {
+  166   1        u16 i;
+  167   1        do
+  168   1        {
+  169   2          i = MAIN_Fosc / 6000;
+  170   2          while(--i);
+  171   2        }while(--ms);
+  172   1      }
+  173          
+  174          float get_r(float R0,unsigned int ad)
+  175          {
+  176   1        float r;
+  177   1      //  if(ad >= 1228200) return(1228200);
+  178   1        r=R0*(float)ad/(float)(4095.00-ad); 
+  179   1        if(r<=1) r=1;
+  180   1        return(r);
+  181   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-  code size            =       474     ------
+C251 COMPILER V5.60.0,  main                                                               04/08/23  20:23:58  PAGE 4   
+
+  code size            =       617     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
   xdata size           =    ------     ------
   xdata-const size     =    ------     ------
-  edata size           =       296     ------
+  edata size           =       434     ------
   bit size             =    ------     ------
   ebit size            =    ------     ------
   bitaddressable size  =    ------     ------
@@ -226,7 +220,7 @@ Module Information          Static   Overlayable
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-  hconst size          =       107     ------
+  hconst size          =       112     ------
 End of Module Information.
 
 
