@@ -95,6 +95,7 @@ void main(void)
 						delay_ms(10);
 						ADC_convert(i);		//发送轮询通道AD值
 					}
+						printf("MCUID;%s;",mcuid);
 						printf("adc_result;%s",adc_result);	
 						printf("\r\n");
 			}
@@ -176,6 +177,7 @@ float get_r(float R0,unsigned int ad)
 	float r;
 //	if(ad >= 1228200) return(1228200);
 	r=R0*(float)ad/(float)(4095.00-ad);	
-	if(r<=1) r=1;
+//	if(r<=1) r=1;
+	if(r >= 51000) return(51000);
 	return(r);
 }

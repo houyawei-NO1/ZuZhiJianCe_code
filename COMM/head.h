@@ -14,8 +14,9 @@ typedef 	unsigned long	u32;
 
 //Ö÷Æµ
 #define MAIN_Fosc        12000000L 
+//°æ±¾
 #define Major_Ver      0
-#define Minor_Ver      2
+#define Minor_Ver      3
 
 //mcu id
 #define ID_ADDR (&CHIPID0)
